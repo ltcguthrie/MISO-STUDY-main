@@ -9,6 +9,6 @@
 ## Sections
 
 1. [Analysis of Primary Endpoint Metabolites](https://github.com/SonnenburgLab/MISO-STUDY-main/tree/main/PrimaryEndpoint)
-2. [Interpersonal Variance Analysis](#Variance)
-3. [Random Forest Models](#RandomForest)
-4. [Data Files for MISO Study](#data)
+2. [Interpersonal Variance Analysis](https://github.com/SonnenburgLab/MISO-STUDY-main/tree/main/Variance)
+3. [Random Forest Models](https://github.com/SonnenburgLab/MISO-STUDY-main/tree/main/RandomForest)
+4. [Data Files for MISO Study](https://github.com/SonnenburgLab/MISO-STUDY-main/tree/main/data)
