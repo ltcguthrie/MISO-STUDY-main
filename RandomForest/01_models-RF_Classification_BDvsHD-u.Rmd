@@ -1,0 +1,340 @@
+---
+title: "RF_Classification_BDvsHD"
+author: "Leah Guthrie"
+date: "12/31/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("caret")
+library("randomForest")
+```
+
+
+# Importing Data
+```{r}
+ASV <- read.csv("../data/MISO-fecal-asv-long.csv")
+metadata <- read.csv("../data/MISO-metadata.csv")
+urineMetabolome <- read.csv("../data/MISO-urine-metabolites-long.csv")
+plasmaMetabolome <- read.csv("../data/MISO-plasma-metabolites-long.csv")
+fecalMetabolome <- read.csv("../data/MISO-fecal-metabolites-long.csv")
+```
+
+# Plasma Metabolome
+
+## Filter by time point - center and scale data
+```{r}
+plasmaMetabolomet2vst3 <- plasmaMetabolome %>% filter(timepoint != 5) %>% filter(timepoint != 1) %>% filter(timepoint != 4)
+plasmaMetabolomet2vst3x <- plasmaMetabolomet2vst3 %>% select(-c(X,ID2,subject,timepoint,timepointgroup,phase)) %>%
+  mutate_if(is.numeric, scale)
+plasmaMetabolomet2vst3x
+plasmaMetabolomet2vst3y <- plasmaMetabolomet2vst3 %>% select(timepointgroup)
+plasmaMetabolomet2vst3y$timepointgroup <- gsub('BD', 0, plasmaMetabolomet2vst3y$timepointgroup)
+plasmaMetabolomet2vst3y$timepointgroup <- gsub('HD', 1, plasmaMetabolomet2vst3y$timepointgroup)
+plasmaMetabolomet2vst3y
+```
+
+## Training: 80%; Test: 20%
+```{r}
+x <- plasmaMetabolomet2vst3x
+y <- factor(plasmaMetabolomet2vst3y$timepointgroup)
+
+set.seed(2021)
+inTrain <- createDataPartition(y, p = .80, list = FALSE)[,1]
+
+x_train <- x[ inTrain, ]
+x_test  <- x[-inTrain, ]
+
+y_train <- y[ inTrain]
+y_test  <- y[-inTrain]
+```
+
+##
+```{r}
+fsa_rfecontrol <- rfeControl(functions = rfFuncs,
+                      method = "repeatedcv", 
+                      repeats = 5, 
+                      number = 10) 
+```
+
+## Recursive feture elimination algorithm
+```{r}
+# Run RFE
+result_rfe1 <- rfe(x = x_train, 
+                   y = y_train, 
+                   sizes = c(1:53),
+                   rfeControl = fsa_rfecontrol)
+```
+
+
+## Confusion Matrix
+```{r}
+plasmaConfusionMatrix <- as.data.frame(result_rfe1$fit$confusion)
+write.csv(plasmaConfusionMatrix, "ConfusionMatrix/plasmaConfusionMatrix.csv")
+write.csv(result_rfe1$results, "ConfusionMatrix/plasmaAccuracyCohen_estimates.csv")
+```
+
+
+# Urine Metabolome
+```{r}
+urineMetabolomet2vst3 <- urineMetabolome %>% filter(timepoint != 5) %>% filter(timepoint != 1) %>% filter(timepoint != 4)
+urineMetabolomet2vst3x <- urineMetabolomet2vst3 %>% select(-c(ID2,subject,timepoint,timepointgroup,phase))
+urineMetabolomet2vst3x <- urineMetabolomet2vst3x %>%
+  mutate_if(is.numeric, scale)
+urineMetabolomet2vst3y <- urineMetabolomet2vst3 %>% select(timepointgroup)
+urineMetabolomet2vst3y$timepointgroup <- gsub('BD', 0, urineMetabolomet2vst3y$timepointgroup)
+urineMetabolomet2vst3y$timepointgroup <- gsub('HD', 1, urineMetabolomet2vst3y$timepointgroup)
+```
+
+
+## Training: 80%; Test: 20%
+```{r}
+x.u <- urineMetabolomet2vst3x
+y.u <- factor(urineMetabolomet2vst3y$timepointgroup)
+
+set.seed(2021)
+inTrain.u <- createDataPartition(y.u, p = .80, list = FALSE)[,1]
+
+x_train.u <- x.u[ inTrain.u, ]
+x_test.u  <- x.u[-inTrain.u, ]
+
+y_train.u <- y.u[ inTrain.u]
+y_test.u  <- y.u[-inTrain.u]
+```
+
+
+## Recursive feture elimination algorithm
+```{r}
+result_rfe.u <- rfe(x = x_train.u, 
+                   y = y_train.u, 
+                   sizes = c(1:25),
+                   rfeControl = fsa_rfecontrol)
+```
+
+
+```{r}
+urineConfusionMatrix <- as.data.frame(result_rfe.u$fit$confusion)
+write.csv(urineConfusionMatrix, "ConfusionMatrix/urineConfusionMatrix.csv")
+write.csv(result_rfe.u$results, "ConfusionMatrix/urineAccuracyCohen_estimates.csv")
+```
+
+
+# Fecal metabolome
+
+##
+```{r}
+fecalMetabolomet2vst3 <- fecalMetabolome %>% filter(timepoint != 5) %>% filter(timepoint != 1) %>% filter(timepoint != 4)
+fecalMetabolomet2vst3x <- fecalMetabolomet2vst3 %>% select(-c(X,ID2,subject,timepoint,timepointgroup,phase)) %>%
+  mutate_if(is.numeric, scale)
+fecalMetabolomet2vst3x
+fecalMetabolomet2vst3y <- fecalMetabolomet2vst3 %>% select(timepointgroup)
+fecalMetabolomet2vst3y$timepointgroup <- gsub('BD', 0, fecalMetabolomet2vst3y$timepointgroup)
+fecalMetabolomet2vst3y$timepointgroup <- gsub('HD', 1, fecalMetabolomet2vst3y$timepointgroup)
+fecalMetabolomet2vst3y
+```
+
+
+# Training: 80%; Test: 20%
+```{r}
+x.f <- fecalMetabolomet2vst3x
+y.f <- factor(fecalMetabolomet2vst3y$timepointgroup)
+
+set.seed(2021)
+inTrain.f <- createDataPartition(y.f, p = .80, list = FALSE)[,1]
+
+x_train.f <- x.f[ inTrain.f, ]
+x_test.f  <- x.f[-inTrain.f, ]
+
+y_train.f <- y.f[ inTrain.f]
+y_test.f  <- y.f[-inTrain.f]
+```
+
+## Recursive feture elimination algorithm
+```{r}
+result_rfe.f <- rfe(x = x_train.f, 
+                   y = y_train.f, 
+                   sizes = c(1:320),
+                   rfeControl = fsa_rfecontrol)
+```
+
+
+```{r}
+fecalConfusionMatrix <- as.data.frame(result_rfe.f$fit$confusion)
+write.csv(fecalConfusionMatrix, "ConfusionMatrix/fecalConfusionMatrix.csv")
+write.csv(result_rfe.f$results, "ConfusionMatrix/fecalAccuracyCohen_estimates.csv")
+```
+
+# Macronutrients
+```{r}
+macros <- metadata %>% select(c(ID2,timepoint,timepointgroup,Prot_g,Carb_g,Fat_g,TotFib_g))
+macrosMetabolomet2vst3 <- macros %>% filter(timepoint != 5) %>% filter(timepoint != 1) %>% filter(timepoint != 4)
+macrosMetabolomet2vst3x <- macrosMetabolomet2vst3 %>% select(-c(ID2,timepoint,timepointgroup)) %>%
+  mutate_if(is.numeric, scale)
+macrosMetabolomet2vst3x
+macrosMetabolomet2vst3y <- macrosMetabolomet2vst3 %>% select(timepointgroup)
+macrosMetabolomet2vst3y$timepointgroup <- gsub('BD', 0, macrosMetabolomet2vst3y$timepointgroup)
+macrosMetabolomet2vst3y$timepointgroup <- gsub('HD', 1, macrosMetabolomet2vst3y$timepointgroup)
+macrosMetabolomet2vst3y
+```
+
+# Training: 80%; Test: 20%
+```{r}
+x.macr <- macrosMetabolomet2vst3x
+y.macr <- factor(macrosMetabolomet2vst3y$timepointgroup)
+
+set.seed(2021)
+inTrain.macr <- createDataPartition(y.macr, p = .80, list = FALSE)[,1]
+
+x_train.macr <- x.macr[ inTrain.macr, ]
+x_test.macr  <- x.macr[-inTrain.macr, ]
+
+y_train.macr <- y.macr[ inTrain.macr]
+y_test.macr  <- y.macr[-inTrain.macr]
+```
+
+## Recursive feture elimination algorithm
+```{r}
+result_rfe.macr <- rfe(x = x_train.macr, 
+                   y = y_train.macr, 
+                   sizes = c(1:4),
+                   rfeControl = fsa_rfecontrol)
+```
+
+
+```{r}
+macrosConfusionMatrix <- as.data.frame(result_rfe.macr$fit$confusion)
+write.csv(macrosConfusionMatrix, "ConfusionMatrix/macrosConfusionMatrix.csv")
+write.csv(result_rfe.macr$results, "ConfusionMatrix/macrosAccuracyCohen_estimates.csv")
+```
+
+# ASVs
+
+
+##
+```{r}
+ASVt2vst3 <- ASV %>% filter(timepoint != 5) %>% filter(timepoint != 1) %>% filter(timepoint != 4)
+ASVt2vst3x <- ASVt2vst3 %>% select(-c(X,ID2,subject,timepoint,timepointgroup,phase)) %>%
+  mutate_if(is.numeric, scale)
+
+ASVt2vst3x <- ASVt2vst3x %>%
+    select_if(~ !any(is.na(.)))
+ASVt2vst3y <- ASVt2vst3 %>% select(timepointgroup)
+ASVt2vst3y$timepointgroup <- gsub('BD', 0, ASVt2vst3y$timepointgroup)
+ASVt2vst3y$timepointgroup <- gsub('HD', 1, ASVt2vst3y$timepointgroup)
+ASVt2vst3y
+ASVt2vst3x
+```
+
+
+```{r}
+x.asv <- ASVt2vst3x
+y.asv <- factor(ASVt2vst3y$timepointgroup)
+
+set.seed(2021)
+inTrain.asv <- createDataPartition(y.asv, p = .80, list = FALSE)[,1]
+
+x_train.asv <- x.asv[ inTrain.asv, ]
+x_test.asv  <- x.asv[-inTrain.asv, ]
+
+y_train.asv <- y.asv[ inTrain.asv]
+y_test.asv  <- y.asv[-inTrain.asv]
+```
+
+## Recursive feture elimination algorithm
+```{r}
+result_rfe.asv <- rfe(x = x_train.asv, 
+                   y = y_train.asv, 
+                   sizes = c(1:500),
+                   rfeControl = fsa_rfecontrol)
+```
+
+
+```{r}
+asvConfusionMatrix <- as.data.frame(result_rfe.asv$fit$confusion)
+write.csv(asvConfusionMatrix, "ConfusionMatrix/asvconfusionMatrix.csv")
+write.csv(result_rfe.asv$results, "ConfusionMatrix/asvAccuracyCohen_estimates.csv")
+```
+
+
+
+## Metadata
+```{r}
+metadatat2vst3 <- metadata %>% filter(timepoint != 5) %>% filter(timepoint != 1) %>% filter(timepoint != 4)
+metadatat2vst3 <- metadatat2vst3 %>% select(ID2,timepoint,timepointgroup,Age,BSA,Gender)
+metadatat2vst3
+```
+
+
+```{r}
+metadatat2vst3x <- metadatat2vst3 %>% select(-c(ID2,timepoint,timepointgroup))
+metadatat2vst3x$Gender <- gsub('M', 0, metadatat2vst3x$Gender)
+metadatat2vst3x$Gender <- gsub('F', 1, metadatat2vst3x$Gender)
+metadatat2vst3x <- metadatat2vst3x %>% mutate_at(c("Gender"),as.factor) %>%
+  # Center and scale numeric features
+  mutate_if(is.numeric, scale)
+metadatat2vst3x
+```
+
+```{r}
+metadatat2vst3y <- metadatat2vst3 %>% select(timepointgroup)
+metadatat2vst3y$timepointgroup <- gsub('BD', 0, metadatat2vst3y$timepointgroup)
+metadatat2vst3y$timepointgroup <- gsub('HD', 1, metadatat2vst3y$timepointgroup)
+metadatat2vst3y
+```
+
+
+```{r}
+x.meta <-metadatat2vst3x
+y.meta <- factor(metadatat2vst3y$timepointgroup)
+
+set.seed(2021)
+inTrain.meta <- createDataPartition(y.meta, p = .80, list = FALSE)[,1]
+
+x_train.meta <- x.meta[ inTrain.meta, ]
+x_test.meta  <- x.meta[-inTrain.meta, ]
+
+y_train.meta <- y.meta[ inTrain.meta]
+y_test.meta  <- y.meta[-inTrain.meta]
+```
+
+## Recursive feture elimination algorithm
+```{r}
+result_rfe.meta <- rfe(x = x_train.meta, 
+                   y = y_train.meta, 
+                   sizes = c(1:500),
+                   rfeControl = fsa_rfecontrol)
+```
+
+```{r}
+metapAccuracy <- ggplot(data = result_rfe.meta, metric = "Accuracy") + theme_bw() + panel_border(color="black")
+metapKappa <- ggplot(data = result_rfe.meta, metric = "Kappa") + theme_bw() + panel_border(color="black")
+metapAccuracy
+metapKappa
+```
+
+```{r}
+metaConfusionMatrix <- as.data.frame(result_rfe.meta$fit$confusion)
+write.csv(metaConfusionMatrix, "ConfusionMatrix/metaconfusionMatrix.csv")
+write.csv(result_rfe.meta$results, "ConfusionMatrix/metaAccuracyCohen_estimates.csv")
+```
+
+```{r}
+save(metapAccuracy,metapKappa,
+     file = "Plots/RFE-plots-clinc.Rdata")
+```
+
+```{r}
+save(plasmapAccuracy,plasmapKappa, urinepAccuracy, urinepKappa, file = "Plots/RFE-plots.Rdata")
+```
+
+```{r}
+save(macrospAccuracy,macrospKappa,
+     file = "Plots/RFE-plots-macros.Rdata")
+```
+
+```{r}
+save(asvpAccuracy,asvpKappa,
+     file = "Plots/RFE-plots-asv.Rdata")
+```
