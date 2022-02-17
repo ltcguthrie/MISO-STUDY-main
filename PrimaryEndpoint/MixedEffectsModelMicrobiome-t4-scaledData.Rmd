@@ -1,0 +1,77 @@
+---
+title: "00_MixedEffectsModelMicrobiome"
+author: "Leah Guthrie"
+date: "12/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sjPlot)
+library(effectsize)
+library(lme4)
+library(nlme)
+library(effects)
+```
+
+```{r}
+sessionInfo()
+```
+
+
+## 
+```{r}
+urmsGenesDF <- read.csv("../data/MISO/metabolome_targeted/urmsGenesMISO.csv")
+HDdf <- urmsGenesDF %>% filter(phase == "miso")
+HDdf$Gender <- gsub('F', 1, HDdf$Gender)
+HDdf$Gender <- gsub('M', 0, HDdf$Gender)
+HDdf$Gender <- as.numeric(HDdf$Gender)
+HDdf$subject <-as.factor(HDdf$subject)
+HDdft4 <- HDdf %>% filter(timepoint == 4)
+HDdft4
+```
+
+
+
+## Mixed model summary for time-point 4
+
+```{r}
+HDdft4_scaled_all <- HDdft4 %>% select(HIPP,PCS,PAG,IS, Fat_g,Prot_g,TotFib_g,Carb_g,SatFat_g,X4.3.1.23..Tyrosine.ammonia.lyase,X4.3.1.3..Histidine.ammonia.lyase,X4.1.1.83..4.hydroxyphenylacetate.decarboxylase,X4.1.99.1..Tryptophanase,X1.2.1.39..Phenylacetaldehyde.dehydrogenase,
+                                   Gender) 
+HDdft4_scaled_all  <- as.data.frame(scale(HDdft4_scaled_all,center=T,scale=T))
+HDdft4_scaled_all $Diet_group_general <- HDdft4$Diet_group_gen
+HDdft4_scaled_all 
+```
+
+
+
+## PAG
+```{r}
+model_t4_PAG <- lmer(PAG ~ Prot_g  + X1.2.1.39..Phenylacetaldehyde.dehydrogenase + Fat_g + TotFib_g + Carb_g + Diet_group_general + (1|Gender), data = HDdft4_scaled_all)
+model_t4_PAG 
+tab_model(model_t4_PAG)
+```
+
+
+## IS
+```{r}
+model_t4_IS <- lmer(IS ~ Prot_g  + X4.1.99.1..Tryptophanase + Fat_g + TotFib_g + Carb_g + Diet_group_general + (1|Gender), data = HDdft4_scaled_all)
+model_t4_IS
+tab_model(model_t4_IS)
+```
+
+## PCS
+```{r}
+model_t4_PCS <- lmer(PCS ~ Prot_g  + X4.1.1.83..4.hydroxyphenylacetate.decarboxylase + Fat_g + TotFib_g + Carb_g + Diet_group_general + (1|Gender), data = HDdft4_scaled_all)
+model_t4_PCS
+tab_model(model_t4_PCS)
+```
+
+
+## HIPP
+```{r}
+model_t4v4 <- lmer(HIPP ~ Prot_g  + X4.3.1.23..Tyrosine.ammonia.lyase + Fat_g + TotFib_g + Carb_g + Diet_group_general + (1|Gender), data = HDdft4_scaled)
+model_t4v4
+tab_model(model_t4v4)
+```
+

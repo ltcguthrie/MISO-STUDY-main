@@ -1,0 +1,130 @@
+---
+title: "02_Endpoint_plotsurms"
+author: "Leah Guthrie"
+date: "6/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(svglite)
+library(ggpubr)
+library(cowplot)
+library(ggsci)
+```
+
+
+
+
+## Hippuric acid pre-miso, miso, post-miso
+```{r premisopost, echo=FALSE}
+my_comparisons <- list(c("BD","HD"),c("HD","WO"),c("BD","WO") )
+urms$Group <- factor(urms$Group, levels = c("BD", "HD", "WO"))
+hipp_p <- (ggboxplot(urms, x = "Group", y = "HIPP",
+                     color = "Group",add = "jitter",add.params = list(size = 2.5),bxp.errorbar = TRUE, subtitle = "HIPP") +
+             stat_compare_means(comparisons = my_comparisons,label = "p.signif"))
+hipp_pp = hipp_p + xlab("")
+hipp_p = hipp_p + ylab("mg/day/1.73")
+hipp_p = hipp_p + scale_color_nejm() + theme_bw() + xlab(" ") 
+hipp_p = hipp_p + theme_cowplot() + theme(legend.position="none",plot.subtitle = element_text(hjust = 0.5))
+hipp_p 
+```
+
+
+## PAG pre-miso, miso, post-miso
+```{r premisopost, echo=FALSE}
+pag_p <- (ggboxplot(urms, x = "Group", y = "PAG",
+                     color = "Group",add = "jitter",add.params = list(size = 2.5),bxp.errorbar = TRUE, subtitle = "PAG") +
+             stat_compare_means(comparisons = my_comparisons,label = "p.signif"))
+pag_p = pag_p + xlab("")
+pag_p = pag_p + ylab("mg/day/1.73")
+pag_p = pag_p + scale_color_nejm() + theme_bw() + xlab(" ") 
+pag_p = pag_p + theme_cowplot() + theme(legend.position="none",plot.subtitle = element_text(hjust = 0.5))
+pag_p 
+```
+
+## PCS pre-miso, miso, post-miso
+```{r premisopost, echo=FALSE}
+pcs_p <- (ggboxplot(urms, x = "Group", y = "PAG",
+                     color = "Group",add = "jitter",add.params = list(size = 2.5),bxp.errorbar = TRUE, subtitle = "PCS") +
+             stat_compare_means(comparisons = my_comparisons,label = "p.signif"))
+pcs_p = pcs_p + xlab("")
+pcs_p = pcs_p + ylab("mg/day/1.73")
+pcs_p = pcs_p + scale_color_nejm() + theme_bw() + xlab(" ") 
+pcs_p = pcs_p + theme_cowplot() + theme(legend.position="none",plot.subtitle = element_text(hjust = 0.5))
+pcs_p
+```
+
+
+## IS pre-miso, miso, post-miso
+```{r premisopost, echo=FALSE}
+is_p <- (ggboxplot(urms, x = "Group", y = "PAG",
+                     color = "Group",add = "jitter",add.params = list(size = 2.5),bxp.errorbar = TRUE, subtitle = "IS") +
+             stat_compare_means(comparisons = my_comparisons,label = "p.signif"))
+is_p = is_p + xlab("")
+is_p = is_p + ylab("mg/day/1.73")
+is_p = is_p + scale_color_nejm() + theme_bw() + xlab(" ") 
+is_p = is_p + theme_cowplot() + theme(legend.position="none",plot.subtitle = element_text(hjust = 0.5))
+is_p
+```
+
+
+```{r}
+PDHxPAGp <- (ggscatter(HDdf, x = "X1.2.1.39..Phenylacetaldehyde.dehydrogenase", y = "PAG",
+   color = "black", fill= "black", shape = 21, size = 5, # Points color, shape and size
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "black", fill = "grey",linetype="dashed"), # Customize reg. line
+   conf.int = TRUE, # Add confidence interval,
+   cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+   cor.coeff.args = list(method = "spearman", label.x = 0.02, label.y = 50)
+   ))
+PDHxPAGp = PDHxPAGp + theme_cowplot() + xlab("log(PDH)") + ylab("PAG")
+PDHxPAGp
+```
+
+## IS
+```{r}
+tnaxISp <- (ggscatter(HDdf, x = "X4.1.99.1..Tryptophanase", y = "IS",
+   color = "black", fill= "black", shape = 21, size = 5, # Points color, shape and size
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "black", fill = "grey",linetype="dashed"), # Customize reg. line
+   conf.int = TRUE, # Add confidence interval,
+   cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+   cor.coeff.args = list(method = "spearman", label.x = 0.010, label.y = 50)
+   ))
+tnaxISp = tnaxISp + theme_cowplot() + xlab("log(TNA)") + ylab("IS")
+tnaxISp
+```
+
+```{r}
+HPADxPCSp <- (ggscatter(HDdf, x = "X4.1.1.83..4.hydroxyphenylacetate.decarboxylase", y = "PCS",
+   color = "black", fill= "black", shape = 21, size = 5, # Points color, shape and size
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "black",fill = "grey",linetype="dashed"), # Customize reg. line
+   conf.int = TRUE, # Add confidence interval,
+   cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+   cor.coeff.args = list(method = "spearman", label.x = 0.003, label.y = 50)
+   ))
+HPADxPCSp = HPADxPCSp + theme_cowplot() + xlab("log(HPAD)") + ylab("PCS")
+HPADxPCSp
+```
+
+```{r}
+PalxHIPPp <- (ggscatter(HDdf, x = "X4.3.1.3..Histidine.ammonia.lyase", y = "HIPP",
+   color = "black", fill= "black", shape = 21, size = 5, # Points color, shape and size
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "black", fill = "grey",linetype="dashed"), # Customize reg. line
+   conf.int = TRUE, # Add confidence interval,
+   cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+   cor.coeff.args = list(method = "spearman", label.x = 0.010, label.y = 180)
+   ))
+PalxHIPPp = PalxHIPPp + theme_cowplot() + xlab("log(PAL)") + ylab("HIPP")
+PalxHIPPp
+```
+
+
+
+
+
+
