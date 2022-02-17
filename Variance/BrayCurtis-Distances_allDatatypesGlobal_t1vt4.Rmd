@@ -1,0 +1,40 @@
+---
+title: "01-BrayCurtis-Distances"
+author: "Leah Guthrie"
+date: "5/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("microbiome")
+library("vegan")
+```
+
+
+## Functions
+
+### Mean value
+```{r}
+Mean_BCdist <- function(df) {
+  df.m <- vegdist(df , "bray")
+  df.m1 <-  melt(as.matrix(df.m ))
+  df.m2 <- df.m1 %>% filter(value != 0)
+  mBC <- mean(df.m2$value)
+  return(mBC)
+}
+```
+
+### Mean value dataframe
+```{r}
+Mean_BCdist_table <- function(df) {
+  df.m <- vegdist(df , "bray")
+  df.m1 <-  melt(as.matrix(df.m ))
+  df.m2 <- df.m1 %>% filter(value != 0)
+  mBCdf <- df.m2 %>% select(c(value))
+  return(mBCdf)
+}
+```
+
+
